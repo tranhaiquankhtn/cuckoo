@@ -20,6 +20,14 @@ def node_status(url):
         pass
 
 def submit_task(url, task):
+    
+    if task["path"].startswith("http"):
+        submit_url_task(url,task)
+    else:
+        submit_file_task(url, task)
+
+def submit_file_task(url, task):
+    print '[*] Received file submission task'
     url = os.path.join(url, "tasks", "create", "file")
     data = dict(
         package=task["package"],
@@ -42,7 +50,30 @@ def submit_task(url, task):
         return task["id"], None
 
     files = {"file": (task["filename"], open(task["path"], "rb"))}
+
     r = requests.post(url, data=data, files=files)
+    return r.json()["task_id"]
+
+def submit_url_task(url, task):
+    print '[*] Received url submission task'
+    url = os.path.join(url, "tasks", "create", "url")
+    data = dict(
+        package=task["package"],
+        timeout=task["timeout"],
+        priority=task["priority"],
+        options=task["options"],
+        machine=task["machine"],
+        platform=task["platform"],
+        tags=task["tags"],
+        custom=task["custom"],
+        owner=task["owner"],
+        memory=task["memory"],
+        clock=task["clock"],
+        enforce_timeout=task["enforce_timeout"],
+    )
+
+    urlpart = {"url": ("", task["path"])}
+    r = requests.post(url, data=data, files=urlpart)
     return r.json()["task_id"]
 
 def fetch_tasks(url, status):

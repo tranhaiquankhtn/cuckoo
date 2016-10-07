@@ -110,6 +110,7 @@ def handle_node(instance):
 
         # Fetching of reports.
         tasks = fetch_tasks(node.url, status="reported")
+
         for task in tasks[:settings.threshold]:
             # In the case that a Cuckoo node has been reset over time it's
             # possible that there are multiple combinations of
@@ -148,8 +149,12 @@ def handle_node(instance):
             delete_task(node.url, t.task_id)
 
             t.status = Task.FINISHED
-            t.started = datetime.datetime.strptime(task["started_on"],
+            try:
+                t.started = datetime.datetime.strptime(task["started_on"],
                                                    "%Y-%m-%d %H:%M:%S")
+            except:
+                t.started = datetime.datetime.strptime(task["started_on"], 
+                                                   "%a, %d %b %Y %H:%M:%S %Z")
             t.completed = datetime.datetime.now()
 
         log.debug("Fetched %d reports from %s", len(tasks), node.name)
